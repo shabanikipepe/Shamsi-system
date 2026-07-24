@@ -22,6 +22,7 @@
         input, select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
         button.btn-submit { background-color: #2563eb; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 15px; margin-top: 15px; width: 100%; }
         button.btn-issue { background-color: #dc2626; }
+        button.btn-sub { background-color: #d97706; }
         .alert { padding: 10px; margin-top: 10px; border-radius: 5px; display: none; text-align: center; font-weight: bold; }
         .alert-success { background-color: #d1fae5; color: #065f46; }
         .alert-error { background-color: #fee2e2; color: #991b1b; }
@@ -31,9 +32,311 @@
         tr:nth-child(even) { background-color: #f8fafc; }
         .badge-low { background-color: #ef4444; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; }
         .badge-ok { background-color: #10b981; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; }
+        .badge-pending { background-color: #f59e0b; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; }
     </style>
 </head>
 <body>
+
+    <header>🚛 SHAMSI CENTRAL DEPOT - FLEET STORE MANAGEMENT</header>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="openTab('stock')">📦 Stock Balance</button>
+        <button class="tab-btn" onclick="openTab('issue')">📤 Issue Spare (To Vehicle)</button>
+        <button class="tab-btn" onclick="openTab('subcontractor')">🛠️ Sub-Contractor Jobs</button>
+        <button class="tab-btn" onclick="openTab('history')">📜 Historia ya Lori</button>
+        <button class="tab-btn" onclick="openTab('receive')">📥 Receive Goods (GRN)</button>
+        <button class="tab-btn" onclick="openTab('catalog')">⚙️ Registration & Catalog</button>
+    </div>
+
+    <div class="container">
+
+        <!-- TAB 1: STOCK BALANCE -->
+        <div id="stock" class="tab-content active">
+            <div class="card">
+                <h2>Hali ya Stock ya Spea Zote Stoo Kuu</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Part Number</th>
+                            <th>OEM Number</th>
+                            <th>Jina la Spea</th>
+                            <th>Model ya Gari</th>
+                            <th>Location / Shelf</th>
+                            <th>Current Stock</th>
+                            <th>Min Stock Alert</th>
+                            <th>Hali</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 2: ISSUE SPARE TO VEHICLE -->
+        <div id="issue" class="tab-content">
+            <div class="card">
+                <h2>Kutoa Spea Stoo Kwenda Kwenye Lori (Issue Requisition)</h2>
+                <div class="form-grid">
+                    <div class="form-group"><label>Chagua Spea *</label><select id="issue_part"></select></div>
+                    <div class="form-group"><label>Idadi (Qty) *</label><input type="number" id="issue_qty" min="1" value="1"></div>
+                    <div class="form-group"><label>Namba ya Lori (Plate No) *</label><select id="issue_vehicle"></select></div>
+                    <div class="form-group"><label>Job Card / Work Order No.</label><input type="text" id="issue_jobcard" placeholder="k.m. JC-2026-088"></div>
+                    <div class="form-group"><label>Jina la Fundi</label><input type="text" id="issue_mechanic" placeholder="Fundi Anayepokea"></div>
+                </div>
+                <button type="button" class="btn-submit btn-issue" onclick="submitData('/api/transactions/issue', {
+                    part_number: g('issue_part'), qty: g('issue_qty'), plate_number: g('issue_vehicle'),
+                    job_card: g('issue_jobcard'), mechanic: g('issue_mechanic')
+                }, 'issueMsg', loadAll)">Thibitisha Kutoa Spea</button>
+                <div id="issueMsg" class="alert"></div>
+            </div>
+        </div>
+
+        <!-- TAB 3: SUB-CONTRACTOR JOBS -->
+        <div id="subcontractor" class="tab-content">
+            <div class="card">
+                <h2>1. Tuma Spea/Sehemu kwa Fundi wa Nje (Sub-Contractor)</h2>
+                <div class="form-grid">
+                    <div class="form-group"><label>Fundi/Kampuni ya Nje *</label><select id="sub_name"></select></div>
+                    <div class="form-group"><label>Namba ya Lori (Plate No) *</label><select id="sub_vehicle"></select></div>
+                    <div class="form-group"><label>Kitu Kilichotolewa *</label><input type="text" id="sub_item" placeholder="k.m. Injector Pump / Turbo Charger"></div>
+                    <div class="form-group"><label>Kadirio la Gharama (TZS)</label><input type="number" id="sub_cost" value="0"></div>
+                    <div class="form-group"><label>Maelezo Ziada</label><input type="text" id="sub_notes" placeholder="Matengenezo au Kalibration"></div>
+                </div>
+                <button type="button" class="btn-submit btn-sub" onclick="submitData('/api/subcontractor-jobs', {
+                    subcontractor_name: g('sub_name'), plate_number: g('sub_vehicle'), item_description: g('sub_item'),
+                    repair_cost: g('sub_cost'), notes: g('sub_notes')
+                }, 'subMsg', loadAll)">Sajili Kazi ya Nje</button>
+                <div id="subMsg" class="alert"></div>
+            </div>
+
+            <div class="card">
+                <h2>Orodha ya Kazi Zilizopo kwa Sub-Contractors</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fundi wa Nje</th>
+                            <th>Lori</th>
+                            <th>Kitu/Spea</th>
+                            <th>Tarehe Illiyoenda</th>
+                            <th>Gharama</th>
+                            <th>Hali (Status)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 4: VEHICLE HISTORY -->
+        <div id="history" class="tab-content">
+            <div class="card">
+                <h2>Angalia Historia ya Spea za Lori Mahsusi</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Chagua Lori (Plate No)</label>
+                        <select id="hist_vehicle" onchange="loadVehicleHistory(this.value)"></select>
+                    </div>
+                </div>
+                <table style="margin-top:20px;">
+                    <thead>
+                        <tr>
+                            <th>Tarehe</th>
+                            <th>Part Number</th>
+                            <th>Jina la Spea</th>
+                            <th>Idadi (Qty)</th>
+                            <th>Job Card</th>
+                            <th>Fundi Aliyechukua</th>
+                        </tr>
+                    </thead>
+                    <tbody id="histTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 5: RECEIVE GOODS -->
+        <div id="receive" class="tab-content">
+            <div class="card">
+                <h2>Kupokea Spea Mpya Stoo Kuu (Goods Received)</h2>
+                <div class="form-grid">
+                    <div class="form-group"><label>Chagua Spea *</label><select id="receive_part"></select></div>
+                    <div class="form-group"><label>Idadi (Qty) *</label><input type="number" id="receive_qty" min="1" value="1"></div>
+                    <div class="form-group"><label>Msambazaji (Supplier)</label><select id="receive_supplier"></select></div>
+                </div>
+                <button type="button" class="btn-submit" onclick="submitData('/api/transactions/receive', {
+                    part_number: g('receive_part'), qty: g('receive_qty'), supplier_id: g('receive_supplier')
+                }, 'receiveMsg', loadAll)">Weka Stoo Kuu</button>
+                <div id="receiveMsg" class="alert"></div>
+            </div>
+        </div>
+
+        <!-- TAB 6: CATALOG REGISTRATION -->
+        <div id="catalog" class="tab-content">
+            <div class="card">
+                <h2>Usajili wa Spea Mpya / Lori / Fundi wa Nje</h2>
+                <div class="form-grid">
+                    <div class="form-group"><label>Part Number *</label><input type="text" id="part_number" placeholder="1314383"></div>
+                    <div class="form-group"><label>Jina la Spea *</label><input type="text" id="spare_name" placeholder="Oil Filter Scania"></div>
+                    <div class="form-group"><label>Min Stock Level</label><input type="number" id="min_stock" value="5"></div>
+                    <div class="form-group"><label>Location Stoo</label><input type="text" id="location" placeholder="Rack 2 - Bin 04"></div>
+                </div>
+                <button type="button" class="btn-submit" onclick="submitData('/api/spares', {
+                    part_number: g('part_number'), name: g('spare_name'), min_stock: g('min_stock'), location: g('location')
+                }, 'catMsg', loadAll)">Sajili Spea</button>
+                <div id="catMsg" class="alert"></div>
+            </div>
+
+            <div class="card">
+                <h2>Usajili wa Lori Jipya</h2>
+                <div class="form-grid">
+                    <div class="form-group"><label>Plate Number *</label><input type="text" id="plate_number" placeholder="T 123 ABC"></div>
+                    <div class="form-group"><label>Model *</label><input type="text" id="v_model" placeholder="Scania R480"></div>
+                </div>
+                <button type="button" class="btn-submit" onclick="submitData('/api/vehicles', {
+                    plate_number: g('plate_number'), model: g('v_model')
+                }, 'vMsg', loadAll)">Sajili Lori</button>
+                <div id="vMsg" class="alert"></div>
+            </div>
+
+            <div class="card">
+                <h2>Usajili wa Sub-Contractor (Fundi wa Nje)</h2>
+                <div class="form-grid">
+                    <div class="form-group"><label>Jina la Fundi/Kampuni *</label><input type="text" id="sub_comp_name" placeholder="Bosch Pump Center"></div>
+                    <div class="form-group"><label>Aina ya Kazi</label><input type="text" id="sub_service" placeholder="Fuel Pump Repair"></div>
+                </div>
+                <button type="button" class="btn-submit" onclick="submitData('/api/subcontractors', {
+                    name: g('sub_comp_name'), service_type: g('sub_service')
+                }, 'subRegMsg', loadAll)">Sajili Sub-Contractor</button>
+                <div id="subRegMsg" class="alert"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function g(id) { return document.getElementById(id).value; }
+
+        async function submitData(url, data, msgId, reloadFn) {
+            const msgEl = document.getElementById(msgId);
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const res = await response.json();
+                if (res.success) {
+                    msgEl.className = 'alert alert-success';
+                    msgEl.innerText = '✅ ' + res.message;
+                    if(reloadFn) reloadFn();
+                } else {
+                    msgEl.className = 'alert alert-error';
+                    msgEl.innerText = '❌ ' + (res.message || 'Kuna tatizo!');
+                }
+            } catch (err) {
+                msgEl.className = 'alert alert-error';
+                msgEl.innerText = '❌ Imeshindwa kuunganishwa na Server!';
+            }
+            msgEl.style.display = 'block';
+            setTimeout(() => { msgEl.style.display = 'none'; }, 3000);
+        }
+
+        async function returnSubJob(jobId) {
+            const cost = prompt("Weka Gharama Halisi ya Matengenezo (TZS):", "0");
+            if (cost !== null) {
+                await submitData('/api/subcontractor-jobs/return', { job_id: jobId, repair_cost: cost }, 'subMsg', loadAll);
+            }
+        }
+
+        async function loadVehicleHistory(plate) {
+            if(!plate) return;
+            const res = await fetch('/api/history/vehicle/' + plate);
+            const data = await res.json();
+            if(data.success) {
+                document.getElementById('histTable').innerHTML = data.data.map(h => `
+                    <tr>
+                        <td>${new Date(h.date).toLocaleDateString Sw-TZ || h.date}</td>
+                        <td><b>${h.part_number}</b></td>
+                        <td>${h.spare_name || '-'}</td>
+                        <td>${h.qty}</td>
+                        <td>${h.job_card || '-'}</td>
+                        <td>${h.issued_to_mechanic || '-'}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        async function loadAll() {
+            // Spares
+            const resSpares = await fetch('/api/spares');
+            const dataSpares = await resSpares.json();
+            if(dataSpares.success) {
+                document.getElementById('stockTable').innerHTML = dataSpares.data.map(item => {
+                    const isLow = item.current_stock <= item.min_stock;
+                    return `
+                    <tr>
+                        <td><b>${item.part_number}</b></td>
+                        <td>${item.oem_number || '-'}</td>
+                        <td>${item.name}</td>
+                        <td>${item.vehicle_model || '-'}</td>
+                        <td>${item.location || '-'}</td>
+                        <td><b>${item.current_stock} ${item.unit || ''}</b></td>
+                        <td>${item.min_stock}</td>
+                        <td><span class="${isLow ? 'badge-low' : 'badge-ok'}">${isLow ? 'REORDER NOW' : 'OK'}</span></td>
+                    </tr>`;
+                }).join('');
+
+                const options = dataSpares.data.map(s => `<option value="${s.part_number}">${s.name} (${s.part_number}) - Stock: ${s.current_stock}</option>`).join('');
+                document.getElementById('issue_part').innerHTML = options;
+                document.getElementById('receive_part').innerHTML = options;
+            }
+
+            // Vehicles
+            const resVehicles = await fetch('/api/vehicles');
+            const dataVehicles = await resVehicles.json();
+            if(dataVehicles.success) {
+                const vOptions = dataVehicles.data.map(v => `<option value="${v.plate_number}">${v.plate_number} - ${v.model}</option>`).join('');
+                document.getElementById('issue_vehicle').innerHTML = vOptions;
+                document.getElementById('sub_vehicle').innerHTML = vOptions;
+                document.getElementById('hist_vehicle').innerHTML = '<option value="">-- Chagua Lori --</option>' + vOptions;
+            }
+
+            // Subcontractors
+            const resSub = await fetch('/api/subcontractors');
+            const dataSub = await resSub.json();
+            if(dataSub.success) {
+                document.getElementById('sub_name').innerHTML = dataSub.data.map(s => `<option value="${s.name}">${s.name} (${s.service_type || ''})</option>`).join('');
+            }
+
+            // Subcontractor Jobs Table
+            const resSubJobs = await fetch('/api/subcontractor-jobs');
+            const dataSubJobs = await resSubJobs.json();
+            if(dataSubJobs.success) {
+                document.getElementById('subTable').innerHTML = dataSubJobs.data.map(j => `
+                    <tr>
+                        <td><b>${j.subcontractor_name}</b></td>
+                        <td>${j.plate_number}</td>
+                        <td>${j.item_description}</td>
+                        <td>${new Date(j.issue_date).toLocaleDateString()}</td>
+                        <td>${j.repair_cost ? j.repair_cost.toLocaleString() + ' TZS' : '-'}</td>
+                        <td><span class="${j.status === 'PENDING' ? 'badge-pending' : 'badge-ok'}">${j.status}</span></td>
+                        <td>${j.status === 'PENDING' ? `<button onclick="returnSubJob(${j.id})">Rudisha Stoo</button>` : 'Imerejea'}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        window.onload = loadAll;
+    </script>
+</body>
+</html>
 
     <header>🚛 SHAMSI CENTRAL DEPOT - FLEET STORE MANAGEMENT</header>
 
