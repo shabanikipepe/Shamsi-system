@@ -1,0 +1,4 @@
+# Vifaa na mafaili ya siri ambayo hayasafirishwi kwenda GitHub
+.env*.local
+node_modules/
+.next/
