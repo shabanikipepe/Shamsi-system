@@ -46,11 +46,41 @@ db.serialize(() => {
     )`);
 
     // 4. Sub-Contractors List
-    db.run(`CREATE TABLE IF NOT EXISTS subcontractors (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        service_type TEXT,
-        phone TEXT
+    db.run(`// Post Subcontractor Job
+app.post('/api/subcontractor-jobs', (req, res) => {
+    const { subcontractor_name, plate_number, item_description, repair_cost, notes } = req.body;
+    const sql = `INSERT INTO subcontractor_jobs (subcontractor_name, plate_number, item_description, repair_cost, notes) VALUES (?, ?, ?, ?, ?)`;
+    db.run(sql, [subcontractor_name, plate_number, item_description, repair_cost || 0, notes], function(err) {
+        if (err) return res.status(400).json({ success: false, message: err.message });
+        res.json({ success: true, message: "Kazi ya Sub-contractor imesajiliwa kikamilifu!" });
+    });
+});
+
+// Update Status pale spea/sehemu inaporudi kutoka kwa fundi wa nje
+app.post('/api/subcontractor-jobs/return', (req, res) => {
+    const { job_id, repair_cost } = req.body;
+    const sql = `UPDATE subcontractor_jobs SET status = 'RETURNED', return_date = CURRENT_TIMESTAMP, repair_cost = ? WHERE id = ?`;
+    db.run(sql, [repair_cost, job_id], function(err) {
+        if (err) return res.status(400).json({ success: false, message: err.message });
+        res.json({ success: true, message: "Taarifa zimesasishwa: Spea imerejea stoo!" });
+    });
+});
+
+// Get Subcontractor Jobs List
+app.get('/api/subcontractor-jobs', (req, res) => {
+    db.all(`SELECT * FROM subcontractor_jobs ORDER BY id DESC`, [], (err, rows) => res.json({ success: true, data: rows }));
+});
+
+// Get Maintenance History for a Specific Vehicle
+app.get('/api/history/vehicle/:plate_number', (req, res) => {
+    const plate = req.params.plate_number;
+    const sqlTrans = `SELECT t.*, s.name as spare_name FROM transactions t LEFT JOIN spares s ON t.part_number = s.part_number WHERE t.plate_number = ? ORDER BY t.id DESC`;
+    db.all(sqlTrans, [plate], (err, rows) => {
+        if (err) return res.status(400).json({ success: false, message: err.message });
+        res.json({ success: true, data: rows });
+    });
+});
+
     )`);
 
     // 5. Store Transactions (Goods Received & Issued to Vehicle)
