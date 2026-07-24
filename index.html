@@ -3,49 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SHAMSI SYSTEM - Spare Parts Management</title>
+    <title>SHAMSI SYSTEM - Integrated Fleet & Spare Parts Management</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f6f9; }
-        h1 { color: #1a365d; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background-color: #2b6cb0; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:hover { background-color: #2c5282; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #f0f2f5; color: #333; }
+        header { background-color: #0d3b66; color: white; padding: 15px 20px; text-align: center; font-size: 20px; font-weight: bold; }
+        .nav-tabs { display: flex; background: #001f3f; overflow-x: auto; }
+        .tab-btn { background: none; border: none; color: white; padding: 14px 20px; cursor: pointer; font-size: 15px; font-weight: 600; white-space: nowrap; }
+        .tab-btn.active { background: #0582ca; border-bottom: 4px solid #00a8e8; }
+        .container { padding: 20px; max-width: 1100px; margin: 0 auto; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2 { margin-top: 0; color: #0d3b66; border-bottom: 2px solid #eee; padding-bottom: 10px; font-size: 18px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        .form-group { display: flex; flex-direction: column; }
+        label { margin-bottom: 5px; font-weight: 600; font-size: 13px; color: #555; }
+        input, select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        button.btn-submit { background-color: #0582ca; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 15px; margin-top: 15px; width: 100%; }
+        button.btn-submit:hover { background-color: #006494; }
+        .alert { padding: 10px; margin-top: 10px; border-radius: 5px; display: none; text-align: center; font-weight: bold; }
+        .alert-success { background-color: #d4edda; color: #155724; }
+        .alert-error { background-color: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
 
-    <h1>🚛 SHAMSI SYSTEM - USAMBAZAJI NA SPEA ZA MAGARI</h1>
+    <header>🚛 SHAMSI MANAGEMENT SYSTEM</header>
 
-    <div class="card">
-        <h2>Fomu ya Kusajili Spea Mpya (Spares Master)</h2>
-        <form id="spareForm">
-            <div class="form-group">
-                <label>Part Number:</label>
-                <input type="text" placeholder="k.m. 1314383" required>
-            </div>
-            <div class="form-group">
-                <label>OEM Number:</label>
-                <input type="text" placeholder="k.m. OEM-SCANIA-001">
-            </div>
-            <div class="form-group">
-                <label>Jina la Spea (Spare Name):</label>
-                <input type="text" placeholder="k.m. Oil Filter Scania" required>
-            </div>
-            <div class="form-group">
-                <label>Aina/Model ya Gari (Vehicle Model):</label>
-                <input type="text" placeholder="k.m. Scania R480 / Actros">
-            </div>
-            <div class="form-group">
-                <label>Location (Zone / Shelf / Bin):</label>
-                <input type="text" placeholder="k.m. Zone A - Shelf 2 - Bin 04">
-            </div>
-            <button type="button" onclick="alert('Spea imesajiliwa kikamilifu!')">Hifadhi Spea</button>
-        </form>
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="openTab('spares')">⚙️ Spares Master</button>
+        <button class="tab-btn" onclick="openTab('vehicles')">🚛 Magari (Vehicles)</button>
+        <button class="tab-btn" onclick="openTab('suppliers')">🏢 Wasambazaji (Suppliers)</button>
+        <button class="tab-btn" onclick="openTab('subcontractors')">🔧 Sub-Contractors</button>
     </div>
 
+    <div class="container">
+
+        <!-- TAB 1: SPARES MASTER -->
+        <div id="spares" class="tab-content active">
+            <div class="card">
+                <h2>Usajili wa Spea Mpya (Spares Master)</h2>
+                <form id="spareForm">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Part Number *</label><input type="text" id="part_number" required placeholder="k.m. 1314383"></div>
+                        <div class="form-group"><label>OEM Number</label><input type="text" id="oem_number" placeholder="k.m. OEM-SCANIA-01"></div>
+                        <div class="form-group"><label>Jina la Spea *</label><input type="text" id="spare_name" required placeholder="k.m. Oil Filter Scania"></div>
+                        <div class="form-group"><label>Aina/Model ya Gari</label><input type="text" id="vehicle_model" placeholder="k.m. Scania R480 / Actros"></div>
+                        <div class="form-group"><label>Unit (Kizio)</label><input type="text" id="unit" placeholder="k.m. Pcs / Set / Litre"></div>
+                        <div class="form-group"><label>Min Stock Level</label><input type="number" id="min_stock" value="0"></div>
+                        <div class="form-group"><label>Bei ya Kunanunulia (TZS)</label><input type="number" id="buying_price" placeholder="0.00"></div>
+                        <div class="form-group"><label>Location (Zone / Shelf / Bin)</label><input type="text" id="location" placeholder="k.m. Zone A - Rack 2 - Bin 04"></div>
+                    </div>
+                    <button type="button" class="btn-submit" onclick="submitData('/api/spares', {
+                        part_number: g('part_number'), oem_number: g('oem_number'), name: g('spare_name'),
+                        vehicle_model: g('vehicle_model'), unit: g('unit'), min_stock: g('min_stock'),
+                        buying_price: g('buying_price'), location: g('location')
+                    }, 'spareMsg')">Hifadhi Spea</button>
+                    <div id="spareMsg" class="alert"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 2: VEHICLES -->
+        <div id="vehicles" class="tab-content">
+            <div class="card">
+                <h2>Usajili wa Magari ya Kampuni</h2>
+                <form id="vehicleForm">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Namba ya Usajili (Plate No.) *</label><input type="text" id="plate_number" required placeholder="k.m. T 123 ABC"></div>
+                        <div class="form-group"><label>Model ya Gari *</label><input type="text" id="v_model" required placeholder="k.m. Scania R480"></div>
+                        <div class="form-group"><label>Chassis Number</label><input type="text" id="chassis_number" placeholder="Chassis No."></div>
+                        <div class="form-group"><label>Engine Number</label><input type="text" id="engine_number" placeholder="Engine No."></div>
+                        <div class="form-group"><label>Idara / Department</label><input type="text" id="department" placeholder="k.m. Usafirishaji / Logistics"></div>
+                    </div>
+                    <button type="button" class="btn-submit" onclick="submitData('/api/vehicles', {
+                        plate_number: g('plate_number'), model: g('v_model'),
+                        chassis_number: g('chassis_number'), engine_number: g('engine_number'), department: g('department')
+                    }, 'vehicleMsg')">Hifadhi Gari</button>
+                    <div id="vehicleMsg" class="alert"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 3: SUPPLIERS -->
+        <div id="suppliers" class="tab-content">
+            <div class="card">
+                <h2>Usajili wa Wasambazaji (Suppliers)</h2>
+                <form id="supplierForm">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Jina la Kampuni/Muuza Spea *</label><input type="text" id="company_name" required placeholder="k.m. AutoSpares Tanzania Ltd"></div>
+                        <div class="form-group"><label>Mtu wa Mawasiliano (Contact Person)</label><input type="text" id="contact_person" placeholder="Jina la Mhusika"></div>
+                        <div class="form-group"><label>Namba ya Simu</label><input type="text" id="phone" placeholder="07XXXXXXXX"></div>
+                        <div class="form-group"><label>Barua Pepe (Email)</label><input type="email" id="email" placeholder="info@supplier.com"></div>
+                        <div class="form-group"><label>Namba ya TIN</label><input type="text" id="tin" placeholder="TIN Number"></div>
+                    </div>
+                    <button type="button" class="btn-submit" onclick="submitData('/api/suppliers', {
+                        company_name: g('company_name'), contact_person: g('contact_person'),
+                        phone: g('phone'), email: g('email'), tin: g('tin')
+                    }, 'supplierMsg')">Hifadhi Msambazaji</button>
+                    <div id="supplierMsg" class="alert"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 4: SUB-CONTRACTORS -->
+        <div id="subcontractors" class="tab-content">
+            <div class="card">
+                <h2>Usajili wa Makandarasi / Fundi wa Nje (Sub-Contractors)</h2>
+                <form id="subcontractorForm">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Jina la Fundi/Gereji *</label><input type="text" id="sub_name" required placeholder="k.m. Mwanza Precision Engineering"></div>
+                        <div class="form-group"><label>Aina ya Kazi (Service Specialization)</label><input type="text" id="servicetype" placeholder="k.m. Engine Reboring, Injector Pump Repair"></div>
+                        <div class="form-group"><label>Namba ya Simu</label><input type="text" id="sub_phone" placeholder="07XXXXXXXX"></div>
+                        <div class="form-group"><label>Eneo / Location</label><input type="text" id="sub_location" placeholder="k.m. Mwanza, Tanzania"></div>
+                    </div>
+                    <button type="button" class="btn-submit" onclick="submitData('/api/subcontractors', {
+                        name: g('sub_name'), service_type: g('servicetype'),
+                        phone: g('sub_phone'), location: g('sub_location')
+                    }, 'subMsg')">Hifadhi Sub-Contractor</button>
+                    <div id="subMsg" class="alert"></div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function g(id) { return document.getElementById(id).value; }
+
+        async function submitData(url, data, msgId) {
+            const msgEl = document.getElementById(msgId);
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const res = await response.json();
+                if (res.success) {
+                    msgEl.className = 'alert alert-success';
+                    msgEl.innerText = '✅ ' + res.message;
+                } else {
+                    msgEl.className = 'alert alert-error';
+                    msgEl.innerText = '❌ ' + (res.message || 'Kuna tatizo limetokea!');
+                }
+            } catch (err) {
+                msgEl.className = 'alert alert-error';
+                msgEl.innerText = '❌ Imeshindwa kuunganishwa na Server!';
+            }
+            msgEl.style.display = 'block';
+            setTimeout(() => { msgEl.style.display = 'none'; }, 4000);
+        }
+    </script>
 </body>
 </html>
-
